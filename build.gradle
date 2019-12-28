@@ -1,0 +1,49 @@
+
+apply plugin : "java"
+apply plugin : "antlr"
+
+ext {
+   javaMainClass = "demo.Data"
+}
+ 
+repositories {
+    // Use jcenter for resolving your dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    mavenCentral()
+}
+
+dependencies {
+    // This dependency is exported to consumers, that is to say found on their compile classpath.
+    compile(
+    [
+     'org.apache.commons:commons-math3:3.6.1', 
+     'commons-collections:commons-collections:3.2.2', 
+     'org.uncommons.maths:uncommons-maths:1.2.2a', 
+     'javacc:javacc:4.1'
+     ]
+    )
+
+	antlr "org.antlr:antlr4:4.5"
+
+    // This dependency is used internally, and not exposed to consumers on their own compile classpath.
+    implementation 'com.google.guava:guava:26.0-jre'
+
+	testCompile 'junit:junit:4.12'
+}
+
+test {
+          // configure java.util.logging for the test JVM(s)
+    systemProperty 'java.util.logging.config.file', 'src/main/resources/logging.properties'
+}
+
+task runWithExec(type: Exec) {
+    //dependsOn build
+    group = "Execution"
+    description = "Run the main class with ExecTask"
+    commandLine "java", "-classpath", sourceSets.main.runtimeClasspath.getAsPath(), javaMainClass
+}
+
+generateGrammarSource {
+    maxHeapSize = "64m"
+    arguments += ["-visitor", "-long-messages"]
+}

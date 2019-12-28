@@ -1,0 +1,230 @@
+// FILE:    iLogo.jj
+// PURPOSE: Defines the iLogo grammar for use by JavaCC in creating a
+//          custom parser for iLogo.
+// METHOD:  Subset of Logo syntax provided by the Berkeley Logo system.
+//          Uses features of JavaCC to create a simple lookahead parser.
+//
+// MODS:    11.29.98 Rev1 -- original -- jlueck@mit.edu
+//
+
+/* All terminals in logo are case insensitive */
+options{IGNORE_CASE=true;MULTI=true;VISITOR=true;NODE_PREFIX="il";NODE_SCOPE_HOOK=true;}
+
+/* Main procedure */
+PARSER_BEGIN(iLogoParser)
+
+import java.io.*;
+
+public class iLogoParser {
+
+	private static void jjtreeOpenNodeScope(Node node) {
+		((SimpleNode) node).firstToken = getToken(1);
+	}
+
+	private static void jjtreeCloseNodeScope(Node node) {
+		((SimpleNode) node).lastToken = getToken(0);
+	}
+
+	public static void Usage() {
+		System.out.println("Usage:  ");
+		System.out.println("       java iLogoParser [-p|-c|-t] [-o out_file] in_file");
+		System.out.println("       -p:  parser for iLogo files");
+		System.out.println("       -c:  parser & semantic checker for iLogo files");
+		System.out.println("       -t:  translator for iLogo files [default]");
+		System.out.println("       -o:  output file [stdout by default]");
+	}
+
+	public static void main(String args[]) {
+
+		iLogoEngine engine = null;
+		PrintStream out = null;
+
+		if (args.length == 0 || args.length > 4) {
+			Usage();
+			return;
+		}
+
+		int i = 0;
+		while (i < args.length - 1) {
+
+			if (args[i].equals("-p")) {
+				engine = new iLogoParserEngine();
+				i++;
+			} else if (args[i].equals("-c")) {
+				engine = new iLogoCheckerEngine();
+				i++;
+			} else if (args[i].equals("-t")) {
+				engine = new iLogoTransEngine();
+				i++;
+			} else if (args[i].equals("-o")) {
+				i++;
+				if (i == args.length - 1) {
+					Usage();
+					return;
+				}
+				File f = new File(args[i]);
+				try {
+					FileOutputStream fout = new FileOutputStream(f);
+					out = new PrintStream(fout);
+					i++;
+				} catch (IOException e) {
+					System.err.println("Could not open " + f + " for writing!");
+					e.printStackTrace();
+					return;
+				}
+			}
+		}
+
+		if (out == null)
+			out = System.out;
+		if (engine == null)
+			engine = new iLogoTransEngine();
+
+		engine.setPrintStream(out);
+		engine.run(args[args.length - 1]);
+	}
+
+}
+
+PARSER_END(iLogoParser)
+
+/* WHITE SPACE */
+
+SKIP:{" "|"\t"|"\n"|"\r"|"\f"}
+
+/* COMMENTS */
+
+MORE:{"#":SINGLE_LINE_COMMENT}
+
+<SINGLE_LINE_COMMENT>SPECIAL_TOKEN:{<COMMENT:"\n"|"\r"|"\r\n">:DEFAULT}
+
+<SINGLE_LINE_COMMENT>MORE:{<~[]>}
+
+/* RESERVED WORDS AND LITERALS */
+
+TOKEN:{<AND:"and">|<BACKWARD:"backward">|<BACKWARDL:"backwardl">|<BACKWARDR:"backwardr">|<BL:"bl">|<BR:"br">|<DO_UNLESS:"do.unless">|<DO_WHILE:"do.while">|<FALSE:"false">|<FL:"fl">|<FOR:"for">|<FORWARD:"forward">|<FORWARDL:"forwardl">|<FORWARDR:"forwardr">|<FR:"fr">|<IF:"if">|<IFELSE:"ifelse">|<MAKE:"make">|<NOT:"not">|<OR:"or">|<PRINT:"print">|<READSENSOR:"readsensor">|<TRUE:"true">|<WAIT:"wait">}
+
+/* LITERALS */
+
+TOKEN:{<STRING_LITERAL:"\""(~["\""])*"\"">|<INTEGER_LITERAL:(["1"-"9"](["0"-"9"])*|"0")> /* FIXME: "-" */
+|<IDENTIFIER:<LETTER>(<LETTER>|<DIGIT>|"_")*>|<#LETTER:["a"-"z","A"-"Z"]>|<#DIGIT:["0"-"9"]>}
+
+/* SEPARATORS */
+
+TOKEN:{<LBRACE:"[">|<RBRACE:"]">|<LPAREN:"(">|<RPAREN:")">}
+
+/* OPERATORS */
+TOKEN:{<EQ:"=">|<NE:"!=">|<LT:"<">|<LE:"<=">|<GT:">">|<GE:">=">|<PLUS:"+">|<MINUS:"-">|<MUL:"*">|<DIV:"/">|<MOD:"%">}
+
+/******************************************
+ * THE iLOGO LANGUAGE GRAMMAR STARTS HERE *
+ ******************************************/
+
+SimpleNode Program(): {
+}{(Command())+{return jjtThis;}<EOF>
+}
+
+/*** Commands ***/
+
+void Command(): {
+}{(MakeCommand()|IfCommand()|WaitCommand()|ForCommand()|DoWhileCommand()|DoUnlessCommand()|MoveCommand()|PrintCommand())
+}
+
+void MakeCommand(): {
+}{"make"Identifier()Expression()
+}
+
+void IfCommand(): {
+}{"if"Expression()InstructionList()(InstructionList())?
+}
+
+void WaitCommand(): {
+}{"wait"Expression()
+}
+
+void ForCommand(): {
+}{"for"List()InstructionList()
+}
+
+void DoWhileCommand(): {
+}{"do.while"InstructionList()Expression()
+}
+
+void DoUnlessCommand(): {
+}{"do.unless"InstructionList()Expression()InstructionList()
+}
+
+void MoveCommand(): {
+}{MoveOp()(Expression()Expression())?
+}
+
+void PrintCommand(): {
+	Token t;}{"print"t=<STRING_LITERAL>{jjtThis.setValue(t.image);}
+	}
+
+	void InstructionList(): {
+	}{"["(Command())*"]"
+	}
+
+	/*** Expressions ***/
+
+	void Expression(): {
+	}{(LOOKAHEAD(2)BooleanExpression()|LOOKAHEAD(2)NumericExpression()|Identifier()
+
+			)
+	}
+
+	void BooleanExpression(): {
+	}{(LOOKAHEAD(2)"("BooleanOp()Expression()Expression()")"|LOOKAHEAD(2)"("LogicalOp()(Expression())+")"|Boolean()|"readsensor"Sensor())
+	}
+
+	void NumericExpression(): {
+	}{(LOOKAHEAD(2)"("NumericOp()Expression()(Expression())*")"|LOOKAHEAD(2)"("Expression()")"|Integer())
+	}
+
+	void List(): {
+	}{"["(Expression())*"]"
+	}
+
+	/*** Operators & Sensors ***/
+
+	void Sensor(): {
+	}{("fr"|"fl"|"br"|"bl")
+	}
+
+	void MoveOp(): {
+	}{("forward"|"forwardr"|"forwardl"|"backward"|"backwardr"|"backwardl")
+	}
+
+	void BooleanOp(): {
+	}{("="|"!="|">"|">="|"<"|"<=")
+	}
+
+	void LogicalOp(): {
+	}{("and"|"or"|"not")
+	}
+
+	void NumericOp(): {
+	}{("+"|"-"|"*"|"/"|"%")
+	}
+
+	/*** Literals ***/
+
+	void Boolean(): {
+	}{("true"|"false")
+	}
+
+	void Integer(): {
+	}{<INTEGER_LITERAL>
+	}
+
+	void Identifier() : 
+	{
+		Token t;
+	}
+	{
+		t = <IDENTIFIER>
+		{
+			jjtThis.setName(t.image);
+		}
+	}
