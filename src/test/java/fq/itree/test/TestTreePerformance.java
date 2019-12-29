@@ -8,7 +8,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import org.junit.AfterClass;
@@ -16,6 +15,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.uncommons.maths.random.ContinuousUniformGenerator;
+import org.uncommons.maths.random.GaussianGenerator;
 
 import fq.itree.ITree;
 import fq.itree.SubdomainNode;
@@ -62,12 +62,14 @@ public class TestTreePerformance {
     	double[][] ranges = {
     			{0f,10f},
     			{0f,10f},
-    			{0f,10f}
+    			{0f,10f},
+    			{0f,10f},
+    			{0f,10f},			
         };
     	
-    	double[] w =  {0.2f, 0.3f, 0.4f};
+    	double[] w =  {0.2f, 0.3f, 0.4f, 1f, 1f};
     	
-    	compareQueryAndSort(10,3,ranges, null, w);
+    	compareQueryAndSort(400,5,ranges, null, w);
     }
     
     //@Test
@@ -93,7 +95,7 @@ public class TestTreePerformance {
     	
     	double[] w =  {0.2f, 0.3f, 0.4f};
     	
-    	compareQueryAndSort(200,3,ranges, null, w);
+    	compareQueryAndSort(100,5,ranges, null, w);
     }
     
     /** 
@@ -111,7 +113,10 @@ public class TestTreePerformance {
 		
 		for(int i = 0;i<nDim; i++) {
 			//uniform distribution.
-			g.generators.add(new ContinuousUniformGenerator(ranges[i][0],ranges[i][1],new Random(gaia.nextInt())));
+//			g.generators.add(new ContinuousUniformGenerator(ranges[i][0],ranges[i][1],new Random(gaia.nextInt())));
+			double mean = (ranges[i][0] + ranges[i][1])/2;
+			double deviration = (mean - ranges[i][0])/3;
+			g.generators.add(new GaussianGenerator(mean,deviration,new Random(gaia.nextInt())));
 		}
 		
 		g.generate();
@@ -133,7 +138,7 @@ public class TestTreePerformance {
         
         long tEnd = System.currentTimeMillis();
         double tDelta = tEnd - tStart;
-        double elapsedSeconds = tDelta / 1000.0;
+        double elapsedSeconds = tDelta/1000;
         
         logger.log(Level.INFO, String.format("Querying takes %f s\n", elapsedSeconds));
         
@@ -145,7 +150,7 @@ public class TestTreePerformance {
         
         tEnd = System.currentTimeMillis();
         tDelta = tEnd - tStart;
-        elapsedSeconds = tDelta / 1000.0;
+        elapsedSeconds = tDelta/1000;
         logger.log(Level.INFO, String.format("Querying takes %f s\n", elapsedSeconds));
     }
     

@@ -9,14 +9,11 @@ parse
  ;
 
 expression
- : LPAREN expression RPAREN                       #parenExp
+ : LPAREN expression RPAREN                       #parentExpr
  | NOT expression                                 #negateExpr
  | left=expression op=binary right=expression     #binaryExpr
+ | left=primary cp=comparator right=primary       #compareExpr
  ;
- 
-comparision
- : left=primary cp=comparator right=primary       #compareExpr
-;
 
 primary
  : bool                                           #boolExpr

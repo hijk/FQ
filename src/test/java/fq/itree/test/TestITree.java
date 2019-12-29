@@ -16,6 +16,8 @@ import fq.itree.TreeStatistics;
 public class TestITree {
 	private static TreeStatistics stat;
 	
+	public static SubdomainNode none = new SubdomainNode(null);
+	
     @BeforeClass
     public static void beforeAll()  throws Exception{
     	stat = new TreeStatistics();
@@ -49,8 +51,8 @@ public class TestITree {
         assertTrue(stat.nLeafNodes==2);   
         assertTrue(t.equals(
         		new ITree(new InterNode(0,1,
-        				null,
-        				null)
+        				none,
+        				none)
         				))
         		);
     }
@@ -68,9 +70,9 @@ public class TestITree {
         assertTrue(t.equals(
         		new ITree(new InterNode(0,1,
         				new InterNode(0,2,
-        						new InterNode(1,2,null,null),
-        						null),
-        				null)
+        						new InterNode(1,2,none,none),
+        						none),
+        				none)
         				))
         		);
     }
