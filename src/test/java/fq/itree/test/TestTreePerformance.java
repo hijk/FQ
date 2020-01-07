@@ -179,4 +179,9 @@ public class TestTreePerformance {
     	}
     	return weight;
     }
+    
+    public static void main(String[] args) {
+    	
+    }
+    
 }

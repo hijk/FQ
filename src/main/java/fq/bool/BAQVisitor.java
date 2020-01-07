@@ -4,21 +4,6 @@ import java.util.ArrayList;
 
 import fq.matrix.RankMatrix;
 
-class Index{
-	public int i;
-	public int j;
-	public Index(int i, int j) {
-		this.i = i;
-		this.j = j;
-	}
-}
-
-class QueryResult{
-	public ArrayList<Index> result = new ArrayList<Index>();
-	public QueryResult() {
-	}
-}
-
 public class BAQVisitor extends BoolExpressionBaseVisitor<Object> {
 
 	private final RankMatrix rm;

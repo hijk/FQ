@@ -1,13 +1,51 @@
 package fq.itree;
 
-import java.util.logging.*;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Logger;
+
+
+class Worker implements Runnable{
+	protected ITree itree;
+    protected BlockingQueue queue = null;
+    public int i;
+    public int j;
+
+    public Worker(ITree itree, BlockingQueue queue) {
+        this.itree = itree;
+    	this.queue = queue;
+    }
+
+    public void run() {
+        try {
+			Node n = (Node) queue.take();
+			if(n instanceof SubdomainNode) {
+				InterNode p = (InterNode)n.parent;
+				if(p.left==n) {
+					p.left = itree.makeInterNode(i, j, p);
+				}else if(p.right==n){
+					p.right = itree.makeInterNode(i, j, p);
+				}
+			}else {
+				InterNode inode = (InterNode)n;
+				int p = inode.a;
+				int q = inode.b;
+				if(itree.existRoot(p,q,i,j,true)) {// exists some X so that fp (X) − fq (X) ≥ 0 and fi (X) − fj (X) = 0. 
+					queue.add(inode.left);
+				}
+				if(itree.existRoot(p,q,i,j,false)) {// exists some X so that fp (X) − fq (X) < 0 and fi (X) − fj (X) = 0. 
+					queue.add(inode.right);
+				}
+			}
+			
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
 
 public class ITree implements Serializable{
 	
@@ -42,7 +80,7 @@ public class ITree implements Serializable{
 	public void buildTree() {
 		for(int i = 0;i<this.nObjects;i++) {
 			for(int j = i+1;j<this.nObjects;j++) {
-				this.insertIntersection(i,j);
+				this.insertIntersectionMD(i,j);
 			}
 		}
 	}
@@ -81,7 +119,22 @@ public class ITree implements Serializable{
 		}
 	}
 	
-	private boolean existRoot(int p, int q, int i, int j, boolean above) {
+	public void insertIntersectionMD(int i, int j) {
+		logger.fine("Insert intersection:("+i+","+j+")");
+		if(this.root==null) {
+			this.root = this.makeInterNode(i,j,null);
+			return;
+		}
+		
+		BlockingQueue queue = new LinkedBlockingQueue(2048);
+		queue.add(this.root);
+		
+		while(queue.size()>0) {
+
+		}
+	}
+	
+	boolean existRoot(int p, int q, int i, int j, boolean above) {
 		int k = 0;
 		double[] pq = intersection(p,q);
 		if(above==false) {

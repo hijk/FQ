@@ -1,5 +1,7 @@
+version = '1.0'
 
 apply plugin : "java"
+apply plugin: 'eclipse'
 apply plugin : "antlr"
 
 ext {
@@ -41,6 +43,18 @@ task runWithExec(type: Exec) {
     group = "Execution"
     description = "Run the main class with ExecTask"
     commandLine "java", "-classpath", sourceSets.main.runtimeClasspath.getAsPath(), javaMainClass
+}
+
+//create a single Jar with all dependencies
+task fatJar(type: Jar) {
+	manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',  
+        	'Implementation-Version': version,
+        	'Main-Class': 'fq.itree.TreeBuilder'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }
 
 generateGrammarSource {
