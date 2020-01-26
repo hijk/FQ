@@ -4,23 +4,19 @@ import java.util.logging.Logger;
 
 import javax.swing.JFrame;
 
-public class TestITree {
+public class TestITree2 {
 	private static TreeStatistics stat = new TreeStatistics();
 
 	public static SubdomainNode none = new SubdomainNode(null);
 
 	private static Logger logger = LogManager.getLogManager().getLogger(Logger.GLOBAL_LOGGER_NAME);
-
+	
 	public static void main(String[] args) throws Exception {
-		double[][] data = null;
-		if(Boolean.parseBoolean(args[0])==true) {
-			
-		}else {
-			DataGenerator generator = new DataGenerator(4, 3, false);
-			generator.generate(0, 10);
-
-			data = generator.data;
-		}
+	
+		logger.setLevel(Level.CONFIG);
+		
+		double[][] data = { { 3, 2, 4 }, { 2, 1, 3 }, { 1, 3, 2 },
+		};
 
 		double[][] weights = new double[data[0].length][2];
 		for (int i = 0; i < weights.length; i++) {
@@ -86,4 +82,5 @@ public class TestITree {
 		printTreeNode(t, n.right, depth + 1, "right:");
 	}
 
+	
 }

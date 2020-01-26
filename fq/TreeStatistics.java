@@ -1,6 +1,6 @@
 //package fq.itree;
 
-public class TreeStatistics extends AbstractTreeWalker{
+public class TreeStatistics extends AbstractTreeWalker {
 	public int nLeafNodes;
 	public int nInnerNodes;
 	public int maxDepth = 0;
@@ -9,12 +9,12 @@ public class TreeStatistics extends AbstractTreeWalker{
 
 	@Override
 	public void callback(Node n) {
-		if(n instanceof SubdomainNode) {
+		if (n instanceof SubdomainNode) {
 			this.nLeafNodes += 1;
 			this.maxDepth = Math.max(this.maxDepth, n.depth);
 			this._sumDepth += n.depth;
-		}else {
-			this.nInnerNodes +=1;
+		} else {
+			this.nInnerNodes += 1;
 		}
 
 	}
@@ -29,6 +29,6 @@ public class TreeStatistics extends AbstractTreeWalker{
 
 	@Override
 	public void afterall() {
-		this.averageDepth = ((float)this._sumDepth)/this.nLeafNodes;
+		this.averageDepth = ((float) this._sumDepth) / this.nLeafNodes;
 	}
 }
